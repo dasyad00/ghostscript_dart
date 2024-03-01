@@ -13,8 +13,8 @@ dependencies:
   plugin_platform_interface: ^2.0.2
 
 dev_dependencies:
-  ffi: ^2.0.1
-  ffigen: ^6.1.2
+  ffi: ^2.1.0
+  ffigen: ^9.0.0
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
@@ -40,6 +40,20 @@ flutter:
     platforms:
       windows:
         ffiPlugin: true
+
+ffigen:
+  name: GhostScriptDartBindings
+  description: Auto-generated Dart bindings for GhostScript
+  output: "lib/gs_iapi.dart"
+  headers:
+    entry-points:
+      - "src/iapi.h"
+  preamble: |
+    // ignore_for_file: camel_case_types, non_constant_identifier_names
+  exclude-all-by-default: true
+  functions:
+    include:
+      - ".*"
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:
