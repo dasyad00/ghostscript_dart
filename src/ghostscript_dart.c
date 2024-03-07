@@ -1,23 +1,41 @@
 #include "ghostscript_dart.h"
 
-// A very short-lived native function.
-//
-// For very short-lived functions, it is fine to call them on the main isolate.
-// They will block the Dart execution while running the native function, so
-// only do this for native functions which are guaranteed to be short-lived.
-FFI_PLUGIN_EXPORT intptr_t sum(intptr_t a, intptr_t b) { return a + b; }
+void *gsinst = NULL;
 
-// A longer-lived native function, which occupies the thread calling it.
-//
-// Do not call these kind of native functions in the main isolate. They will
-// block Dart execution. This will cause dropped frames in Flutter applications.
-// Instead, call these native functions on a separate isolate.
-FFI_PLUGIN_EXPORT intptr_t sum_long_running(intptr_t a, intptr_t b) {
-  // Simulate work.
-#if _WIN32
-  Sleep(5000);
-#else
-  usleep(5000 * 1000);
-#endif
-  return a + b;
+FFI_PLUGIN_EXPORT int gsdart_revision(gsapi_revision_t *pr, int len)
+{
+  return gsapi_revision(pr, len);
+}
+
+FFI_PLUGIN_EXPORT int gsdart_new_instance()
+{
+  if (gsinst != NULL)
+    return 0;
+  return gsapi_new_instance(&gsinst, NULL);
+}
+
+FFI_PLUGIN_EXPORT int gsdart_set_arg_encoding(int encoding)
+{
+  return gsapi_set_arg_encoding(gsinst, encoding);
+}
+
+FFI_PLUGIN_EXPORT int gsdart_init_with_args(int argc, char **argv)
+{
+  printf("argc=%i\n", argc);
+  for (int i = 0; i < argc; ++i)
+  {
+    printf("String %i @ %p: %s\n", i, &argv[i], argv[i]);
+  }
+  return gsapi_init_with_args(gsinst, argc, argv);
+}
+
+FFI_PLUGIN_EXPORT int gsdart_exit()
+{
+  return gsapi_exit(gsinst);
+}
+
+FFI_PLUGIN_EXPORT void gsdart_delete_instance()
+{
+  gsapi_delete_instance(gsinst);
+  gsinst = NULL;
 }

@@ -1,9 +1,8 @@
 import 'dart:async';
 
-import 'package:ghostscript_dart/src/isolate_messages.dart';
-
 import 'gs_iapi.dart';
 import 'isolate.dart';
+import 'isolate_messages.dart';
 import 'models.dart';
 
 class GhostscriptDart {

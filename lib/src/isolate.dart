@@ -12,25 +12,28 @@ import 'models.dart';
 
 const String _libName = 'gsdll64';
 
-final DynamicLibrary _dylib = () {
+// final DynamicLibrary _dylib = getDyLib(_libName);
+final DynamicLibrary gsdart_lib = getDyLib("ghostscript_dart");
+DynamicLibrary getDyLib(String libName) {
   try {
     if (Platform.isMacOS || Platform.isIOS) {
-      return DynamicLibrary.open('$_libName.framework/$_libName');
+      return DynamicLibrary.open('$libName.framework/$libName');
     }
     if (Platform.isAndroid || Platform.isLinux) {
-      return DynamicLibrary.open('lib$_libName.so');
+      return DynamicLibrary.open('lib$libName.so');
     }
     if (Platform.isWindows) {
-      return DynamicLibrary.open('$_libName.dll');
+      return DynamicLibrary.open('$libName.dll');
     }
     throw UnsupportedError('Unknown platform: ${Platform.operatingSystem}');
   } on ArgumentError {
     throw UnsupportedError("Ensure Ghostscript is installed");
   }
-}();
+}
 
 /// The bindings to the native functions in [_dylib].
-final GhostscriptDartBindings _gsapi = GhostscriptDartBindings(_dylib);
+// final GhostscriptDartBindings _gsapi = GhostscriptDartBindings(_dylib);
+final GhostscriptDartBindings gsapi = GhostscriptDartBindings(gsdart_lib);
 
 int isolateRequestId = 0;
 final Map<int, Completer<IsolateResponse>> isolateResponses = {};
@@ -50,7 +53,8 @@ class IsolateResponse {
 GhostscriptRevision gsapi_revision() {
   final len = sizeOf<gsapi_revision_s>();
   final Pointer<gsapi_revision_s> ptr = malloc.allocate(len);
-  final code = _gsapi.revision(ptr.cast(), len);
+  // final code = _gsapi.revision(ptr.cast(), len);
+  final code = gsapi.gsdart_revision(ptr.cast(), len);
 
   if (code != 0) {
     throw GhostscriptDartException("gsapi_revision", code);
@@ -62,7 +66,7 @@ GhostscriptRevision gsapi_revision() {
     revision: value.revision,
     revisionDate: value.revisiondate,
   );
-  malloc.free(ptr);
+  // malloc.free(ptr);
   return revision;
 }
 
@@ -98,8 +102,8 @@ Future<SendPort> helperIsolateSendPortFuture = () async {
 
   // Start the helper isolate responsible for managing instances.
   await Isolate.spawn((SendPort sendPort) {
-    final Map<int, Pointer<Pointer<Void>>> _instancePtrs = {};
-    int _instanceId = 0;
+    // final Map<int, Pointer<Pointer<Void>>> _instancePtrs = {};
+    // int _instanceId = 0;
 
     final ReceivePort requestReceivePort = ReceivePort()
       ..listen((data) {
@@ -111,15 +115,17 @@ Future<SendPort> helperIsolateSendPortFuture = () async {
         final requestId = data.id;
         final request = data.request;
         if (request is NewInstanceRequest) {
-          final i = _instanceId++;
-          final Pointer<Pointer<Void>> _gsapiInstancePtr = malloc.allocate(1);
-          _gsapiInstancePtr.value = nullptr;
-          final result = _gsapi.new_instance(_gsapiInstancePtr, nullptr);
+          const i = 0;
+          // final i = _instanceId++;
+          // final Pointer<Pointer<Void>> _gsapiInstancePtr = malloc.allocate(1);
+          // _gsapiInstancePtr.value = nullptr;
+          final result = gsapi.gsdart_new_instance();
+          // final result = _gsapi.new_instance(_gsapiInstancePtr, nullptr);
           // assert(_instancePtrs[i] == null);
-          if (_instancePtrs[i] != null) {
-            throw StateError("Already exists instance with id $i");
-          }
-          _instancePtrs[i] = _gsapiInstancePtr;
+          // if (_instancePtrs[i] != null) {
+          //   throw StateError("Already exists instance with id $i");
+          // }
+          // _instancePtrs[i] = _gsapiInstancePtr;
           final response = NewInstanceResponse(i, result);
           sendPort.send(IsolateResponse(requestId, response));
           return;
@@ -128,35 +134,43 @@ Future<SendPort> helperIsolateSendPortFuture = () async {
           throw UnsupportedError(
               "Unsupported message type: ${data.runtimeType}");
         }
-        final instanceId = request.instanceId;
-        final instancePtr = _instancePtrs[instanceId];
-        if (instancePtr == null) {
-          throw StateError("No instance with id $instanceId");
-        }
-        final instance = instancePtr.value;
-        if (instance == nullptr) {
-          throw StateError(
-              "Reference to nullptr in instance with id $instanceId");
-        }
+        const instanceId = 0;
+        // final instanceId = request.instanceId;
+        // final instancePtr = _instancePtrs[instanceId];
+        // if (instancePtr == null) {
+        //   throw StateError("No instance with id $instanceId");
+        // }
+        // final instance = instancePtr.value;
+        // if (instance == nullptr) {
+        //   throw StateError(
+        //       "Reference to nullptr in instance with id $instanceId");
+        // }
         // assert(instance != nullptr);
         switch (request) {
           case final SetArgEncodingRequest request:
             final encoding = request.encoding;
-            final result = _gsapi.set_arg_encoding(instance, encoding);
+            final result = gsapi.gsdart_set_arg_encoding(encoding);
+            // final result = _gsapi.set_arg_encoding(instance, encoding);
             final response = SetArgEncodingResponse(instanceId, result);
             sendPort.send(IsolateResponse(requestId, response));
             return;
           case final InitWithArgsRequest request:
             final arguments = request.arguments;
             final argc = arguments.length;
-            final Pointer<Pointer<Char>> argv = malloc.allocate(argc);
+            final Pointer<Pointer<Char>> argv = calloc.allocate(argc + 1);
+            print("argv = ${argv.address.toRadixString(16)}");
             for (final (index, charPtr) in arguments.indexed) {
-              argv[index] = charPtr.toNativeUtf8().cast();
+              argv[index] = charPtr.toNativeUtf8(allocator: calloc).cast();
+              print(
+                  "argv[$index] @ ${argv[index].address.toRadixString(16)} = ${arguments[index]}");
             }
-            final result = _gsapi.init_with_args(instance, argc, argv);
+            argv[argc] = nullptr;
+            print(
+                "argv[$argc] @ ${argv[argc].address.toRadixString(16)} = nullptr (believe me)");
+            print("-----------------------------------------------");
+            final result = gsapi.gsdart_init_with_args(argc, argv);
+            // final result = _gsapi.init_with_args(instance, argc, argv);
             final response = InitWithArgsResponse(instanceId, result);
-            // errors without waiting
-            sleep(const Duration(seconds: 5));
             // cleanup
             for (var i = 0; i < argc; i++) {
               malloc.free(argv[i]);
@@ -165,17 +179,19 @@ Future<SendPort> helperIsolateSendPortFuture = () async {
             sendPort.send(IsolateResponse(requestId, response));
             return;
           case ExitRequest():
-            final result = _gsapi.exit(instance);
+            final result = gsapi.gsdart_exit();
+            // final result = _gsapi.exit(instance);
             final response = ExitResponse(instanceId, result);
             sendPort.send(IsolateResponse(requestId, response));
             return;
           case DeleteInstanceRequest():
-            _gsapi.delete_instance(instance);
+            gsapi.gsdart_delete_instance();
+            // _gsapi.delete_instance(instance);
             final response = DeleteInstanceResponse(instanceId);
-            final pointer = _instancePtrs.remove(instanceId);
-            if (pointer != null) {
-              malloc.free(pointer);
-            }
+            // final pointer = _instancePtrs.remove(instanceId);
+            // if (pointer != null) {
+            //   malloc.free(pointer);
+            // }
             sendPort.send(IsolateResponse(requestId, response));
             return;
         }

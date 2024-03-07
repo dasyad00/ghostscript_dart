@@ -920,6 +920,81 @@ class GhostscriptDartBindings {
   late final _remove_fs = _remove_fsPtr.asFunction<
       void Function(ffi.Pointer<ffi.Void>, ffi.Pointer<gsapi_fs_t>,
           ffi.Pointer<ffi.Void>)>();
+
+  int gsdart_revision(
+    ffi.Pointer<gsapi_revision_s> pr,
+    int len,
+  ) {
+    return _gsdart_revision(
+      pr,
+      len,
+    );
+  }
+
+  late final _gsdart_revisionPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int Function(
+              ffi.Pointer<gsapi_revision_s>, ffi.Int)>>('gsdart_revision');
+  late final _gsdart_revision = _gsdart_revisionPtr
+      .asFunction<int Function(ffi.Pointer<gsapi_revision_s>, int)>();
+
+  int gsdart_new_instance() {
+    return _gsdart_new_instance();
+  }
+
+  late final _gsdart_new_instancePtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function()>>('gsdart_new_instance');
+  late final _gsdart_new_instance =
+      _gsdart_new_instancePtr.asFunction<int Function()>();
+
+  int gsdart_set_arg_encoding(
+    int encoding,
+  ) {
+    return _gsdart_set_arg_encoding(
+      encoding,
+    );
+  }
+
+  late final _gsdart_set_arg_encodingPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int)>>(
+          'gsdart_set_arg_encoding');
+  late final _gsdart_set_arg_encoding =
+      _gsdart_set_arg_encodingPtr.asFunction<int Function(int)>();
+
+  int gsdart_init_with_args(
+    int argc,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> argv,
+  ) {
+    return _gsdart_init_with_args(
+      argc,
+      argv,
+    );
+  }
+
+  late final _gsdart_init_with_argsPtr = _lookup<
+      ffi.NativeFunction<
+          ffi.Int Function(ffi.Int,
+              ffi.Pointer<ffi.Pointer<ffi.Char>>)>>('gsdart_init_with_args');
+  late final _gsdart_init_with_args = _gsdart_init_with_argsPtr
+      .asFunction<int Function(int, ffi.Pointer<ffi.Pointer<ffi.Char>>)>();
+
+  int gsdart_exit() {
+    return _gsdart_exit();
+  }
+
+  late final _gsdart_exitPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function()>>('gsdart_exit');
+  late final _gsdart_exit = _gsdart_exitPtr.asFunction<int Function()>();
+
+  void gsdart_delete_instance() {
+    return _gsdart_delete_instance();
+  }
+
+  late final _gsdart_delete_instancePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function()>>(
+          'gsdart_delete_instance');
+  late final _gsdart_delete_instance =
+      _gsdart_delete_instancePtr.asFunction<void Function()>();
 }
 
 final class gsapi_revision_s extends ffi.Struct {

@@ -87,6 +87,10 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _onPressed() async {
+    setState(() {
+      allowSubmit = false;
+    });
+
     final gs = await GhostscriptDart.newInstance();
     gs.setEncoding(GS_ARG_ENCODING_UTF8);
     final text = textController.text.trim();
@@ -114,9 +118,9 @@ class _MyAppState extends State<MyApp> {
     }
     print("\n-------------------\n");
     gs.close();
+
     setState(() {
-      inputFilePath = "";
-      allowSubmit = false;
+      allowSubmit = true;
     });
     print("_onPressed done!");
   }

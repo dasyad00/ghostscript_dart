@@ -51,8 +51,10 @@ ffigen:
   headers:
     entry-points:
       - "src/iapi.h"
+      - "src/ghostscript_dart.h"
     include-directives:
       - "src/iapi.h"
+      - "src/ghostscript_dart.h"
   preamble: |
     // ignore_for_file: always_specify_types
     // ignore_for_file: camel_case_types
