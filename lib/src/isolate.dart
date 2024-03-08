@@ -112,91 +112,91 @@ Future<SendPort> helperIsolateSendPortFuture = () async {
           throw UnsupportedError(
               "Unsupported message type: ${data.runtimeType}");
         }
-        final requestId = data.id;
-        final request = data.request;
-        if (request is NewInstanceRequest) {
-          const i = 0;
-          // final i = _instanceId++;
-          // final Pointer<Pointer<Void>> _gsapiInstancePtr = malloc.allocate(1);
-          // _gsapiInstancePtr.value = nullptr;
-          final result = gsapi.gsdart_new_instance();
-          // final result = _gsapi.new_instance(_gsapiInstancePtr, nullptr);
-          // assert(_instancePtrs[i] == null);
-          // if (_instancePtrs[i] != null) {
-          //   throw StateError("Already exists instance with id $i");
-          // }
-          // _instancePtrs[i] = _gsapiInstancePtr;
-          final response = NewInstanceResponse(i, result);
-          sendPort.send(IsolateResponse(requestId, response));
-          return;
-        }
-        if (request is! GsInstanceRequest) {
-          throw UnsupportedError(
-              "Unsupported message type: ${data.runtimeType}");
-        }
-        const instanceId = 0;
-        // final instanceId = request.instanceId;
-        // final instancePtr = _instancePtrs[instanceId];
-        // if (instancePtr == null) {
-        //   throw StateError("No instance with id $instanceId");
-        // }
-        // final instance = instancePtr.value;
-        // if (instance == nullptr) {
-        //   throw StateError(
-        //       "Reference to nullptr in instance with id $instanceId");
-        // }
-        // assert(instance != nullptr);
-        switch (request) {
-          case final SetArgEncodingRequest request:
-            final encoding = request.encoding;
-            final result = gsapi.gsdart_set_arg_encoding(encoding);
-            // final result = _gsapi.set_arg_encoding(instance, encoding);
-            final response = SetArgEncodingResponse(instanceId, result);
-            sendPort.send(IsolateResponse(requestId, response));
-            return;
-          case final InitWithArgsRequest request:
-            final arguments = request.arguments;
-            final argc = arguments.length;
-            final Pointer<Pointer<Char>> argv = calloc.allocate(argc + 1);
-            print("argv = ${argv.address.toRadixString(16)}");
-            for (final (index, charPtr) in arguments.indexed) {
-              argv[index] = charPtr.toNativeUtf8(allocator: calloc).cast();
-              print(
-                  "argv[$index] @ ${argv[index].address.toRadixString(16)} = ${arguments[index]}");
-            }
-            argv[argc] = nullptr;
-            print(
-                "argv[$argc] @ ${argv[argc].address.toRadixString(16)} = nullptr (believe me)");
-            print("-----------------------------------------------");
-            final result = gsapi.gsdart_init_with_args(argc, argv);
-            // final result = _gsapi.init_with_args(instance, argc, argv);
-            final response = InitWithArgsResponse(instanceId, result);
-            // cleanup
-            for (var i = 0; i < argc; i++) {
-              malloc.free(argv[i]);
-            }
-            malloc.free(argv);
-            sendPort.send(IsolateResponse(requestId, response));
-            return;
-          case ExitRequest():
-            final result = gsapi.gsdart_exit();
-            // final result = _gsapi.exit(instance);
-            final response = ExitResponse(instanceId, result);
-            sendPort.send(IsolateResponse(requestId, response));
-            return;
-          case DeleteInstanceRequest():
-            gsapi.gsdart_delete_instance();
-            // _gsapi.delete_instance(instance);
-            final response = DeleteInstanceResponse(instanceId);
-            // final pointer = _instancePtrs.remove(instanceId);
-            // if (pointer != null) {
-            //   malloc.free(pointer);
-            // }
-            sendPort.send(IsolateResponse(requestId, response));
-            return;
-        }
+        final response = processIsolateRequest(data);
+        sendPort.send(response);
       });
     sendPort.send(requestReceivePort.sendPort);
   }, responseReceivePort.sendPort);
   return completer.future;
 }();
+
+IsolateResponse processIsolateRequest(IsolateRequest isolateRequest) {
+  final requestId = isolateRequest.id;
+  final request = isolateRequest.request;
+  if (request is NewInstanceRequest) {
+    const i = 0;
+    // final i = _instanceId++;
+    // final Pointer<Pointer<Void>> _gsapiInstancePtr = malloc.allocate(1);
+    // _gsapiInstancePtr.value = nullptr;
+    final result = gsapi.gsdart_new_instance();
+    // final result = _gsapi.new_instance(_gsapiInstancePtr, nullptr);
+    // assert(_instancePtrs[i] == null);
+    // if (_instancePtrs[i] != null) {
+    //   throw StateError("Already exists instance with id $i");
+    // }
+    // _instancePtrs[i] = _gsapiInstancePtr;
+    final response = NewInstanceResponse(i, result);
+    return IsolateResponse(requestId, response);
+  }
+  if (request is! GsInstanceRequest) {
+    throw UnsupportedError(
+        "Unsupported message type: ${isolateRequest.runtimeType}");
+  }
+  const instanceId = 0;
+  // final instanceId = request.instanceId;
+  // final instancePtr = _instancePtrs[instanceId];
+  // if (instancePtr == null) {
+  //   throw StateError("No instance with id $instanceId");
+  // }
+  // final instance = instancePtr.value;
+  // if (instance == nullptr) {
+  //   throw StateError(
+  //       "Reference to nullptr in instance with id $instanceId");
+  // }
+  // assert(instance != nullptr);
+  switch (request) {
+    case final SetArgEncodingRequest request:
+      final encoding = request.encoding;
+      final result = gsapi.gsdart_set_arg_encoding(encoding);
+      // final result = _gsapi.set_arg_encoding(instance, encoding);
+      final response = SetArgEncodingResponse(instanceId, result);
+      return IsolateResponse(requestId, response);
+    case final InitWithArgsRequest request:
+      final arguments = request.arguments;
+      final argc = arguments.length;
+      final Pointer<Pointer<Char>> argv = calloc.allocate(argc + 1);
+      print("argv = ${argv.address.toRadixString(16)}");
+      for (final (index, charPtr) in arguments.indexed) {
+        argv[index] = charPtr.toNativeUtf8(allocator: calloc).cast();
+        print(
+            "argv[$index] @ ${argv[index].address.toRadixString(16)} = ${arguments[index]}");
+      }
+      argv[argc] = nullptr;
+      print(
+          "argv[$argc] @ ${argv[argc].address.toRadixString(16)} = nullptr (believe me)");
+      print("-----------------------------------------------");
+      final result = gsapi.gsdart_init_with_args(argc, argv);
+      // final result = _gsapi.init_with_args(instance, argc, argv);
+      final response = InitWithArgsResponse(instanceId, result);
+      // cleanup
+      for (var i = 0; i < argc; i++) {
+        malloc.free(argv[i]);
+      }
+      malloc.free(argv);
+      return IsolateResponse(requestId, response);
+    case ExitRequest():
+      final result = gsapi.gsdart_exit();
+      // final result = _gsapi.exit(instance);
+      final response = ExitResponse(instanceId, result);
+      return IsolateResponse(requestId, response);
+    case DeleteInstanceRequest():
+      gsapi.gsdart_delete_instance();
+      // _gsapi.delete_instance(instance);
+      final response = DeleteInstanceResponse(instanceId);
+      // final pointer = _instancePtrs.remove(instanceId);
+      // if (pointer != null) {
+      //   malloc.free(pointer);
+      // }
+      return IsolateResponse(requestId, response);
+  }
+}
