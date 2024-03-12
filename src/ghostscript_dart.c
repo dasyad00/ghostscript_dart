@@ -21,11 +21,6 @@ FFI_PLUGIN_EXPORT int gsdart_set_arg_encoding(int encoding)
 
 FFI_PLUGIN_EXPORT int gsdart_init_with_args(int argc, char **argv)
 {
-  printf("argc=%i\n", argc);
-  for (int i = 0; i < argc; ++i)
-  {
-    printf("String %i @ %p: %s\n", i, &argv[i][0], argv[i]);
-  }
   return gsapi_init_with_args(gsinst, argc, argv);
 }
 

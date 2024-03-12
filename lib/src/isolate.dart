@@ -104,7 +104,6 @@ Future<SendPort> helperIsolateSendPortFuture = () async {
   await Isolate.spawn((SendPort sendPort) {
     // final Map<int, Pointer<Pointer<Void>>> _instancePtrs = {};
     // int _instanceId = 0;
-
     final ReceivePort requestReceivePort = ReceivePort()
       ..listen((data) {
         // On the helper isolate, listen to requests and respond to them.
@@ -164,23 +163,15 @@ IsolateResponse processIsolateRequest(IsolateRequest isolateRequest) {
     case final InitWithArgsRequest request:
       final arguments = request.arguments;
       final argc = arguments.length;
-      final Pointer<Pointer<Char>> argv = calloc.allocate(argc + 1);
-      print("argv = ${argv.address.toRadixString(16)}");
-      for (final (index, charPtr) in arguments.indexed) {
-        argv[index] = charPtr.toNativeUtf8(allocator: calloc).cast();
-        print(
-            "argv[$index] @ ${argv[index].address.toRadixString(16)} = ${arguments[index]}");
+      final ffiStrings = arguments.map((str) => str.toNativeUtf8()).toList();
+      final Pointer<Pointer<Char>> argv = malloc.call<Pointer<Char>>(argc);
+      for (int i = 0; i < ffiStrings.length; i++) {
+        argv[i] = ffiStrings[i].cast();
       }
-      argv[argc] = nullptr;
-      print(
-          "argv[$argc] @ ${argv[argc].address.toRadixString(16)} = nullptr (believe me)");
-      print("-----------------------------------------------");
       final result = gsapi.gsdart_init_with_args(argc, argv);
-      // final result = _gsapi.init_with_args(instance, argc, argv);
       final response = InitWithArgsResponse(instanceId, result);
-      // cleanup
-      for (var i = 0; i < argc; i++) {
-        malloc.free(argv[i]);
+      for (final ptr in ffiStrings) {
+        malloc.free(ptr);
       }
       malloc.free(argv);
       return IsolateResponse(requestId, response);
