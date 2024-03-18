@@ -12,8 +12,8 @@ class GhostscriptDart {
 
   static Future<GsResponse> _compute(GsRequest request) async {
     // uncomment to not run in an isolate
-    final isolateResponse = processIsolateRequest(IsolateRequest(0, request));
-    return Future.value(isolateResponse.response);
+    // final isolateResponse = processIsolateRequest(IsolateRequest(0, request));
+    // return Future.value(isolateResponse.response);
     final helperIsolateSendPort = await helperIsolateSendPortFuture;
     final requestId = isolateRequestId++;
     final completer = Completer<IsolateResponse>();
