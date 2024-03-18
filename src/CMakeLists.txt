@@ -9,9 +9,12 @@ add_library(ghostscript_dart SHARED
   "ghostscript_dart.c"
 )
 
+set(GSDLL_PATH "C:\\Program Files\\gs\\gs10.02.1\\bin")
+
 set_target_properties(ghostscript_dart PROPERTIES
   PUBLIC_HEADER ghostscript_dart.h
   OUTPUT_NAME "ghostscript_dart"
 )
 
 target_compile_definitions(ghostscript_dart PUBLIC DART_SHARED_LIB)
+target_link_libraries(ghostscript_dart  "${GSDLL_PATH}\\gsdll64.lib")

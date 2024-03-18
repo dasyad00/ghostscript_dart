@@ -8,6 +8,8 @@ This project is a starting point for a Flutter
 [FFI plugin](https://docs.flutter.dev/development/platform-integration/c-interop),
 a specialized package that includes native code directly invoked with Dart FFI.
 
+Take `iapi.h` from `psi/iapi.h` in the `ghostpdl` source repository.
+
 ## Project structure
 
 This template uses the following structure:
